@@ -188,13 +188,13 @@ const NewEvent = () => {
         const eventDocRef = doc(db, "events", eventId);
         await updateDoc(eventDocRef, eventData);
         console.log("Event updated successfully!");
+        navigate("/regform", { state: { eventId: eventId } });
       } else {
         const eventDocRef = doc(collection(db, "events"));
         await setDoc(eventDocRef, { ...eventData, docid: eventDocRef.id });
         console.log("Event created successfully!");
+        navigate("/regform", { state: { eventId: eventDocRef.id } });
       }
-
-      navigate("/regform", { state: { eventId: eventId || null } });
     } catch (error) {
       console.error("Error saving event:", error);
     }

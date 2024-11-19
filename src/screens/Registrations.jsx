@@ -113,6 +113,8 @@ const Registrations = ({ isLoggedIn }) => {
 
       await setDoc(registrationsRef, submittedData);
       console.log("Registration successful:", eventId, submittedData);
+      alert("Registration is Successful");
+      navigate("/");
     } catch (error) {
       console.error("Error saving registration:", error);
     }

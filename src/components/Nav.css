@@ -92,17 +92,23 @@ header {
 /* Responsive styling */
 @media (max-width: 768px) {
   header {
-    flex-direction: column;
-    align-items: flex-start;
-    padding: 10px;
+    flex-direction: row; /* Ensure all items stay in one row */
+    justify-content: space-between; /* Keep items spaced correctly */
   }
 
-  .logo-image {
-    width: 40px; /* Reduce logo size on smaller screens */
+  .logo {
+    flex: 1; /* Allow the logo to take up available space */
   }
 
   .menu-toggle {
-    display: block;
+    display: inline-block;
+    cursor: pointer;
+    font-size: 1.5rem;
+    color: #ffffff;
+    padding: 5px 10px;
+    border: 1px solid #ffd700;
+    border-radius: 5px;
+    margin-left: auto; /* Push the toggle to the far right */
   }
 
   .nav {
@@ -123,16 +129,10 @@ header {
     text-align: left;
   }
 
-  /* Menu icon for mobile */
-  .menu-toggle {
-    display: inline-block;
-    cursor: pointer;
-    font-size: 1.5rem;
-    color: #ffffff;
-    padding: 5px 10px;
-    border: 1px solid #ffd700;
-    border-radius: 5px;
-    margin-top: 5px;
+  /* Optional hover effect for menu icon */
+  .menu-toggle:hover {
+    background-color: #ffd700;
+    color: black;
   }
 }
 
