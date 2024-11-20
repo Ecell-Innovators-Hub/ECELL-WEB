@@ -105,7 +105,12 @@ const App = () => {
               isLoggedIn ? (
                 <Dashboard isLoggedIn={isLoggedIn} user={user} />
               ) : (
-                <p>Please log in to access the Dashboard.</p>
+                <Login
+                  setIsLoggedIn={setIsLoggedIn}
+                  setUser={setUser}
+                  isLoggedIn={isLoggedIn}
+                  user={user}
+                />
               )
             }
           />

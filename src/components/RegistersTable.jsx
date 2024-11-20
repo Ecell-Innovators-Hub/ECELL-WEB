@@ -25,7 +25,6 @@ const RegistersTable = () => {
   const [errorMessage, setErrorMessage] = useState("");
   const [events, setEvents] = useState([]); // For dropdown event list
   const [selectedEventId, setSelectedEventId] = useState(null); // For selected event
-  
 
   useEffect(() => {
     const fetchEvents = async () => {
@@ -266,32 +265,76 @@ const RegistersTable = () => {
   };
 
   const exportToExcel = () => {
-    const combinedWorksheetData = registrations.map((registration) => {
+    const teamDetailsData = []; // Data for the Team Details sheet
+    const memberDetailsData = []; // Data for the Member Details sheet
+
+    registrations.forEach((registration) => {
       const teamId = registration.teamData?.teamId || "N/A";
-      const teamName = registration.teamData?.teamName || "N/A";
+      const teamName = registration?.["Team Name"] || "N/A";
       const teamSize = registration.teamData?.teamSize || "N/A";
 
+      // Add marks criteria
       const marksData = {};
       marksCriteria.forEach((criteria) => {
         marksData[`${criteria.name} (${criteria.totalMarks})`] =
           registration.marks?.[criteria.name] || "N/A";
       });
-
       const totalMarks = calculateTotalMarks(teamId);
 
-      return {
+      // Add team details to the Team Details sheet
+      teamDetailsData.push({
         "Team ID": teamId,
         "Team Name": teamName,
         "Team Size": teamSize,
         ...marksData,
         "Total Marks": totalMarks,
-      };
+      });
+
+      // Add a row for each team member to the Member Details sheet
+      registration.teamData?.members?.forEach((member) => {
+        const memberData = {
+          "Team ID": teamId,
+        };
+
+        // Add form fields to member rows
+        formFields.forEach((field) => {
+          memberData[field.label] = Array.isArray(registration[field.label])
+            ? registration[field.label].join(", ")
+            : registration[field.label] || "N/A";
+        });
+
+        // Add member-specific details
+        teamConfig?.memberDetails.forEach((detail) => {
+          memberData[detail.label] = member[detail.label] || "N/A";
+        });
+
+        memberDetailsData.push(memberData);
+      });
     });
 
-    const worksheet = XLSX.utils.json_to_sheet(combinedWorksheetData);
+    // Function to create a worksheet and append to an Excel file
+    const appendSheetToWorkbook = (workbook, data, sheetName) => {
+      const worksheet = XLSX.utils.json_to_sheet(data);
+
+      // Adjust column widths dynamically
+      const columnWidths = Object.keys(data[0] || {}).map((key) => ({
+        width: Math.max(15, key.length + 5), // Adjust based on header lengths
+      }));
+      worksheet["!cols"] = columnWidths;
+
+      // Append the worksheet to the workbook
+      XLSX.utils.book_append_sheet(workbook, worksheet, sheetName);
+    };
+
+    // Create a new workbook
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "Registrations");
-    XLSX.writeFile(workbook, `${selectedEventId}_registrations.xlsx`);
+
+    // Add sheets for team details and member details
+    appendSheetToWorkbook(workbook, teamDetailsData, "Team Details");
+    appendSheetToWorkbook(workbook, memberDetailsData, "Member Details");
+
+    // Write the workbook to an Excel file
+    XLSX.writeFile(workbook, "event_details.xlsx");
   };
 
   if (isLoading) {

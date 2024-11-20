@@ -1,6 +1,6 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { auth, signInWithEmailAndPassword } from "../firebase";
+import { auth, signInWithEmailAndPassword, signOut } from "../firebase";
 import "./Login.css";
 
 function Login({ setIsLoggedIn, setUser }) {
@@ -10,7 +10,20 @@ function Login({ setIsLoggedIn, setUser }) {
   });
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false); // Loading state
+  const [isLoggedIn, setLocalIsLoggedIn] = useState(false); // Local state for login status
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const loggedIn = localStorage.getItem("isLoggedIn") === "true";
+    const storedUser = localStorage.getItem("user");
+
+    if (loggedIn && storedUser) {
+      setLocalIsLoggedIn(true);
+      setIsLoggedIn(true);
+      setUser(JSON.parse(storedUser));
+    }
+  }, [setIsLoggedIn, setUser]);
 
   const handleChange = (e) => {
     const { name, value } = e.target;
@@ -51,6 +64,7 @@ function Login({ setIsLoggedIn, setUser }) {
       localStorage.setItem("isLoggedIn", "true");
       localStorage.setItem("user", JSON.stringify(user));
 
+      setLocalIsLoggedIn(true);
       navigate("/"); // Redirect to home
     } catch (err) {
       setError("Login failed. Please check your credentials.");
@@ -60,49 +74,79 @@ function Login({ setIsLoggedIn, setUser }) {
     }
   };
 
+  const handleLogout = () => {
+    signOut(auth)
+      .then(() => {
+        setIsLoggedIn(false);
+        setUser(null);
+
+        // Clear localStorage
+        localStorage.removeItem("isLoggedIn");
+        localStorage.removeItem("user");
+
+        setLocalIsLoggedIn(false);
+        navigate("/login"); // Redirect to login page
+      })
+      .catch((err) => {
+        setError("Failed to log out. Please try again.");
+        console.error("Error during logout:", err);
+      });
+  };
+
   return (
     <div className="login-container">
-      <h1 className="login-heading">Login</h1>
+      {isLoggedIn ? (
+        <>
+          <h1 className="login-heading">Welcome Back!</h1>
+          <button className="login-button" onClick={handleLogout}>
+            Logout
+          </button>
+        </>
+      ) : (
+        <>
+          <h1 className="login-heading">Login</h1>
 
-      {error && <p className="error-message">{error}</p>}
+          {error && <p className="error-message">{error}</p>}
 
-      <label htmlFor="email" className="input-label">
-        Email
-      </label>
-      <input
-        type="email"
-        placeholder="Email"
-        className="input-field"
-        name="email"
-        id="email"
-        value={formData.email}
-        onChange={handleChange}
-      />
+          <label htmlFor="email" className="input-label">
+            Email
+          </label>
+          <input
+            type="email"
+            placeholder="Email"
+            className="input-field"
+            name="email"
+            id="email"
+            value={formData.email}
+            onChange={handleChange}
+          />
 
-      <label htmlFor="password" className="input-label">
-        Password
-      </label>
-      <input
-        type="password"
-        placeholder="Password"
-        className="input-field"
-        name="password"
-        id="password"
-        value={formData.password}
-        onChange={handleChange}
-      />
+          <label htmlFor="password" className="input-label">
+            Password
+          </label>
+          <input
+            type="password"
+            placeholder="Password"
+            className="input-field"
+            name="password"
+            id="password"
+            value={formData.password}
+            onChange={handleChange}
+          />
 
-      <button
-        className="login-button"
-        onClick={handleLogin}
-        disabled={loading} // Disable button when loading
-      >
-        {loading ? "Logging in..." : "Login"}
-      </button>
+          <button
+            className="login-button"
+            onClick={handleLogin}
+            disabled={loading} // Disable button when loading
+          >
+            {loading ? "Logging in..." : "Login"}
+          </button>
 
-      <p className="footer-text">
-        By logging in, you agree to our <b>Terms & Conditions</b>.
-      </p>
+          <p className="footer-text">
+            By logging in, you agree to our <b>Terms & Conditions</b>.
+          </p>
+        </>
+      )}
     </div>
   );
 }
